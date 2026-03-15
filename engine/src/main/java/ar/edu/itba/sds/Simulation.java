@@ -10,6 +10,9 @@ public class Simulation {
     static final double VELOCITY = 0.03;
     static final double CIRCULAR_SCENARIO_RADIUS = 5;
     static final double[] CIRCULAR_SCENARIO_CENTER = {2, 2};
+    static final double ANGULAR_VELOCITY = VELOCITY / CIRCULAR_SCENARIO_RADIUS;
+    static int CIRCULAR_SCENARIO_STEP = 0;
+    static int CIRCULAR_SCENARIO_MAX_STEP = (int) Math.ceil((2 * Math.PI) / ANGULAR_VELOCITY);
     private static final String DATA_DIR = "data";
     static final int LEADER_ID = 1;
     enum Scenario {
@@ -29,7 +32,6 @@ public class Simulation {
 
         try {
             if (args.length == 2) {
-                System.out.println("entre");
                 String staticFile = args[0];
                 String dynamicFile = args[1];
                 double[] lArr = new double[1];
@@ -110,9 +112,9 @@ public class Simulation {
         double nx, ny;
 
         if (SCENARIO.equals(Scenario.CIRCULAR_LEADER) && p.getId() == LEADER_ID) {
-            double angularVelocity = VELOCITY / CIRCULAR_SCENARIO_RADIUS;
-            nx = CIRCULAR_SCENARIO_CENTER[0] + CIRCULAR_SCENARIO_RADIUS * Math.cos(angularVelocity * VELOCITY);
-            ny = CIRCULAR_SCENARIO_CENTER[1] + CIRCULAR_SCENARIO_RADIUS * Math.sin(angularVelocity * VELOCITY);
+            nx = CIRCULAR_SCENARIO_CENTER[0] + CIRCULAR_SCENARIO_RADIUS * Math.cos(ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP);
+            ny = CIRCULAR_SCENARIO_CENTER[1] + CIRCULAR_SCENARIO_RADIUS * Math.sin(ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP);
+            CIRCULAR_SCENARIO_STEP = (CIRCULAR_SCENARIO_STEP + 1) % CIRCULAR_SCENARIO_MAX_STEP;
         } else {
             nx = p.getX() + Math.cos(p.getAngle()) * VELOCITY;
             ny = p.getY() + Math.sin(p.getAngle()) * VELOCITY;
@@ -154,6 +156,25 @@ public class Simulation {
         return particles;
     }
 
+    private static void saveMapFiles(List<Particle> particles, String baseFilename) {
+        new File(DATA_DIR).mkdirs();
+        try {
+            PrintWriter staticWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + ".txt", true));
+            staticWriter.println(N);
+            staticWriter.println(L);
+            // Metadata line to help the animation highlight the leader when applicable
+            staticWriter.println("SCENARIO " + SCENARIO + " LEADER_ID " + LEADER_ID);
+            for (Particle p : particles) {
+                staticWriter.println(0 /*radius*/ + " " + 1.0);
+            }
+            staticWriter.close();
+
+            // Initial frame is now written in writeDynamicFrame, so no work here
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     private static List<Particle> loadParticles(String staticPath, String dynamicPath, double[] L_out) throws Exception {
         List<Particle> particles = new ArrayList<>();
         Scanner staticScanner = new Scanner(new File(staticPath)).useLocale(java.util.Locale.US);
@@ -163,6 +184,13 @@ public class Simulation {
         L_out[0] = staticScanner.nextDouble();
         if (staticScanner.hasNextLine()) {
             staticScanner.nextLine();
+        }
+
+        // If there is a metadata line starting with SCENARIO, consume it; otherwise, keep scanning radii
+        if (staticScanner.hasNext("SCENARIO")) {
+            if (staticScanner.hasNextLine()) {
+                staticScanner.nextLine();
+            }
         }
 
         for (int i = 0; i < N; i++) {
@@ -208,23 +236,6 @@ public class Simulation {
             System.out.println(e.getMessage());
         }
     }
-    private static void saveMapFiles(List<Particle> particles, String baseFilename) {
-        new File(DATA_DIR).mkdirs();
-        try {
-            PrintWriter staticWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + ".txt", true));
-            staticWriter.println(N);
-            staticWriter.println(L);
-            for (Particle p : particles) {
-                staticWriter.println(0 /*radius*/ + " " + 1.0);
-            }
-            staticWriter.close();
-
-            // Initial frame is now written in writeDynamicFrame, so no work here
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
     private static void saveOutputs(Map<Integer, Set<Particle>> neighbors, String baseFilename, int iteration) {
         String outputPath = DATA_DIR + "/" + baseFilename + "-output.txt";
         try (PrintWriter outWriter = new PrintWriter(new FileWriter(outputPath, true))) {
@@ -244,3 +255,4 @@ public class Simulation {
         }
     }
 }
+
