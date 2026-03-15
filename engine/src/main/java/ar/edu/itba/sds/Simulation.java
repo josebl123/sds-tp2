@@ -5,18 +5,19 @@ import java.util.*;
 
 public class Simulation {
 
-    static double N = 400;
-    static int L = 10;
-    static double VELOCITY = 0.03;
-    static double CIRCULAR_SCENARIO_RADIUS = 5;
-    static double[] CircularScenarioCenter = {2, 2};
+    static final double N = 400;
+    static final int L = 10;
+    static final double VELOCITY = 0.03;
+    static final double CIRCULAR_SCENARIO_RADIUS = 5;
+    static final double[] CIRCULAR_SCENARIO_CENTER = {2, 2};
     private static final String DATA_DIR = "data";
-    static int LEADER_ID = 1;
+    static final int LEADER_ID = 1;
     enum Scenario {
         STANDARD,
         LEADER,
         CIRCULAR_LEADER
     }
+    static Scenario SCENARIO = Scenario.CIRCULAR_LEADER;
 
     public static void main(String[] args) {
         List<Particle> particles = null;
@@ -65,7 +66,7 @@ public class Simulation {
                     writeDynamicFrame(baseFilename, i, particles, true);
                 }
                 for (Particle p : particles) {
-                    updateParticle(p, neighbors.get(p.getId()), eta, Scenario.STANDARD);
+                    updateParticle(p, neighbors.get(p.getId()), eta);
                 }
                 neighbors = cim.calculateNeighbors();
             }
@@ -94,11 +95,11 @@ public class Simulation {
         return Math.sqrt(Math.pow(velocityAccX, 2) + Math.pow(velocityAccY, 2)) / N;
     }
 
-    private static void updateParticle(Particle p, Set<Particle> neighbors, double eta, Scenario scenario) {
-        double sinAvg = 0.0;
-        double cosAvg = 0.0;
-        Random rand = new Random();
-        if (scenario.equals(Scenario.STANDARD)) {
+    private static void updateParticle(Particle p, Set<Particle> neighbors, double eta) {
+        if (SCENARIO.equals(Scenario.STANDARD) || p.getId() != LEADER_ID) {
+            double sinAvg = 0.0;
+            double cosAvg = 0.0;
+            Random rand = new Random();
             for (Particle particle : neighbors) {
                 sinAvg += Math.sin(particle.getAngle());
                 cosAvg += Math.cos(particle.getAngle());
@@ -108,10 +109,10 @@ public class Simulation {
 
         double nx, ny;
 
-        if (scenario.equals(Scenario.CIRCULAR_LEADER)) {
+        if (SCENARIO.equals(Scenario.CIRCULAR_LEADER) && p.getId() == LEADER_ID) {
             double angularVelocity = VELOCITY / CIRCULAR_SCENARIO_RADIUS;
-            nx = p.getX() + CIRCULAR_SCENARIO_RADIUS * Math.cos(angularVelocity * VELOCITY);
-            ny = p.getY() + CIRCULAR_SCENARIO_RADIUS * Math.sin(angularVelocity * VELOCITY);
+            nx = CIRCULAR_SCENARIO_CENTER[0] + CIRCULAR_SCENARIO_RADIUS * Math.cos(angularVelocity * VELOCITY);
+            ny = CIRCULAR_SCENARIO_CENTER[1] + CIRCULAR_SCENARIO_RADIUS * Math.sin(angularVelocity * VELOCITY);
         } else {
             nx = p.getX() + Math.cos(p.getAngle()) * VELOCITY;
             ny = p.getY() + Math.sin(p.getAngle()) * VELOCITY;
@@ -126,6 +127,12 @@ public class Simulation {
         List<Particle> particles = new ArrayList<>();
         Random rand = new Random();
 
+        int ids = 1;
+
+        if (!SCENARIO.equals(Scenario.STANDARD)) {
+            particles.add(new Particle(LEADER_ID, CIRCULAR_SCENARIO_CENTER[0], CIRCULAR_SCENARIO_CENTER[1], rand.nextDouble() * 2 * Math.PI));
+        }
+
         while (particles.size() < N) {
             double x = L * rand.nextDouble();
             double y = L * rand.nextDouble();
@@ -139,8 +146,9 @@ public class Simulation {
             }
 
             if (!overlap) {
-                double angle = rand.nextDouble() * 2 * Math.PI; // radians
-                particles.add(new Particle(particles.size() + 1, 1.0, x, y, angle));
+                double angle = rand.nextDouble() * 2 * Math.PI;
+                if (ids == LEADER_ID) ids++;
+                particles.add(new Particle(ids++, x, y, angle));
             }
         }
         return particles;
@@ -157,19 +165,10 @@ public class Simulation {
             staticScanner.nextLine();
         }
 
-        List<Double> properties = new ArrayList<>();
-
         for (int i = 0; i < N; i++) {
             String line = staticScanner.nextLine().trim();
             while (line.isEmpty() && staticScanner.hasNextLine()) {
                 line = staticScanner.nextLine().trim();
-            }
-
-            String[] parts = line.split("\\s+");
-            if (parts.length > 1) {
-                properties.add(Double.parseDouble(parts[1]));
-            } else {
-                properties.add(1.0);
             }
         }
 
@@ -189,7 +188,7 @@ public class Simulation {
             double x = Double.parseDouble(parts[0]);
             double y = Double.parseDouble(parts[1]);
             double angle = Double.parseDouble(parts[2]);
-            particles.add(new Particle(i + 1, properties.get(i), x, y, angle));
+            particles.add(new Particle(i + 1, x, y, angle));
         }
 
         staticScanner.close();

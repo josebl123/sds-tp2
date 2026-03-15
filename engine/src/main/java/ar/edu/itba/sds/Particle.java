@@ -4,14 +4,12 @@ import java.util.Objects;
 
 public class Particle {
     private final int id;
-    private final double property;
     private double x;
     private double y;
     private double angle;
 
-    public Particle(int id, double property, double x, double y, double angle) {
+    public Particle(int id, double x, double y, double angle) {
         this.id = id;
-        this.property = property;
         this.x = x;
         this.y = y;
         this.angle = angle;
