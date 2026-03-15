@@ -5,12 +5,18 @@ import java.util.*;
 
 public class Simulation {
 
-    public static double N = 400;
-    public static int L = 10;
-    public static double VELOCITY = 0.03;
-
+    static double N = 400;
+    static int L = 10;
+    static double VELOCITY = 0.03;
+    static double CIRCULAR_SCENARIO_RADIUS = 5;
+    static double[] CircularScenarioCenter = {2, 2};
     private static final String DATA_DIR = "data";
-
+    static int LEADER_ID = 1;
+    enum Scenario {
+        STANDARD,
+        LEADER,
+        CIRCULAR_LEADER
+    }
 
     public static void main(String[] args) {
         List<Particle> particles = null;
@@ -59,7 +65,7 @@ public class Simulation {
                     writeDynamicFrame(baseFilename, i, particles, true);
                 }
                 for (Particle p : particles) {
-                    updateParticle(p, neighbors.get(p.getId()), eta);
+                    updateParticle(p, neighbors.get(p.getId()), eta, Scenario.STANDARD);
                 }
                 neighbors = cim.calculateNeighbors();
             }
@@ -88,18 +94,28 @@ public class Simulation {
         return Math.sqrt(Math.pow(velocityAccX, 2) + Math.pow(velocityAccY, 2)) / N;
     }
 
-    private static void updateParticle(Particle p, Set<Particle> neighbors, double eta) {
+    private static void updateParticle(Particle p, Set<Particle> neighbors, double eta, Scenario scenario) {
         double sinAvg = 0.0;
         double cosAvg = 0.0;
         Random rand = new Random();
-        for (Particle particle : neighbors) {
-            sinAvg += Math.sin(particle.getAngle());
-            cosAvg += Math.cos(particle.getAngle());
+        if (scenario.equals(Scenario.STANDARD)) {
+            for (Particle particle : neighbors) {
+                sinAvg += Math.sin(particle.getAngle());
+                cosAvg += Math.cos(particle.getAngle());
+            }
+            p.setAngle(Math.atan2(sinAvg, cosAvg) + ((rand.nextDouble() * 2) - 1) * eta / 2);
         }
-        p.setAngle(Math.atan2(sinAvg, cosAvg) + ((rand.nextDouble() * 2) - 1) * eta / 2);
-        double nx = p.getX() + Math.cos(p.getAngle()) * VELOCITY;
-        double ny = p.getY() + Math.sin(p.getAngle()) * VELOCITY;
-        // wrap into [0, L)
+
+        double nx, ny;
+
+        if (scenario.equals(Scenario.CIRCULAR_LEADER)) {
+            double angularVelocity = VELOCITY / CIRCULAR_SCENARIO_RADIUS;
+            nx = p.getX() + CIRCULAR_SCENARIO_RADIUS * Math.cos(angularVelocity * VELOCITY);
+            ny = p.getY() + CIRCULAR_SCENARIO_RADIUS * Math.sin(angularVelocity * VELOCITY);
+        } else {
+            nx = p.getX() + Math.cos(p.getAngle()) * VELOCITY;
+            ny = p.getY() + Math.sin(p.getAngle()) * VELOCITY;
+        }
         nx = ((nx % L) + L) % L;
         ny = ((ny % L) + L) % L;
         p.setX(nx);
