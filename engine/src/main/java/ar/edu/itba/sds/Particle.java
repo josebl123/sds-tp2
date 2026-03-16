@@ -15,6 +15,10 @@ public class Particle {
         this.angle = angle;
     }
 
+    public Particle(Particle other) {
+        this(other.id, other.x, other.y, other.angle);
+    }
+
     public double getDistance(Particle other, double L) {
         double dx = Math.abs(this.x - other.x);
         double dy = Math.abs(this.y - other.y);
