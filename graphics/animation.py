@@ -1,15 +1,12 @@
-#!/usr/bin/env python3
 import argparse
 import os
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 import numpy as np
-
 
 def parse_static_file(path: Path) -> Tuple[int, float, str, Optional[int]]:
     with path.open("r", encoding="utf-8") as f:
@@ -18,7 +15,7 @@ def parse_static_file(path: Path) -> Tuple[int, float, str, Optional[int]]:
     l = float(lines[1])
     scenario = "STANDARD"
     leader_id: Optional[int] = None
-    # Optional metadata line: SCENARIO <name> LEADER_ID <id>
+
     if len(lines) > 2 and lines[2].startswith("SCENARIO"):
         parts = lines[2].split()
         try:
@@ -33,9 +30,7 @@ def parse_static_file(path: Path) -> Tuple[int, float, str, Optional[int]]:
             leader_id = None
     return n, l, scenario, leader_id
 
-
 def parse_dynamic_file(path: Path, n_expected: int) -> List[np.ndarray]:
-    """Parse dynamic file into a list of frames (x, y for each particle)."""
     with path.open("r", encoding="utf-8") as f:
         lines = [line.strip() for line in f if line.strip()]
 
@@ -45,35 +40,26 @@ def parse_dynamic_file(path: Path, n_expected: int) -> List[np.ndarray]:
 
     while i < total:
         parts = lines[i].split()
-        # If this line is a single value, treat it as a time header and skip it
         if len(parts) == 1:
             i += 1
         if i + n_expected > total:
             break
 
-        frame_xy = []
+        frame_data = []
         for _ in range(n_expected):
             vals = lines[i].split()
-            if len(vals) < 2:
-                raise ValueError(f"Expected x y at line {i}, got: {lines[i]}")
-            frame_xy.append((float(vals[0]), float(vals[1])))
+            if len(vals) < 4:
+                raise ValueError(f"Expected x y vx vy at line {i}, got: {lines[i]}")
+            frame_data.append((float(vals[0]), float(vals[1]), float(vals[2]), float(vals[3])))
             i += 1
-        frames.append(np.array(frame_xy, dtype=float))
+        frames.append(np.array(frame_data, dtype=float))
 
     if not frames:
         raise ValueError(f"No frames parsed from {path}")
 
     return frames
 
-
 def parse_neighbors_output(path: Path) -> Tuple[List[Dict[int, List[int]]], List[int]]:
-    """
-    Expected blocks:
-      Iteration: k
-      [1 3 8]
-      [2 5]
-      ...
-    """
     frames: List[Dict[int, List[int]]] = []
     frame_numbers: List[int] = []
 
@@ -113,75 +99,78 @@ def parse_neighbors_output(path: Path) -> Tuple[List[Dict[int, List[int]]], List
 
     return frames, frame_numbers
 
-
 def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interval_ms: int, save_path: Optional[Path]):
     n, l, scenario, leader_id = parse_static_file(static_path)
     dynamic_frames = parse_dynamic_file(dynamic_path, n)
     frames_data, frame_numbers = parse_neighbors_output(neighbors_path)
 
-    def xy_for_frame(idx: int) -> np.ndarray:
+    def data_for_frame(idx: int) -> np.ndarray:
         return dynamic_frames[min(idx, len(dynamic_frames) - 1)]
 
-    fig, ax = plt.subplots(figsize=(6, 6))
+    fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_xlim(0, l)
     ax.set_ylim(0, l)
     ax.set_aspect("equal", adjustable="box")
-    ax.set_title("Vicsek/CIM Neighbors Animation")
+    ax.set_title("Animacion de Bandadas")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
 
-    first_counts = np.array([len(frames_data[0].get(i + 1, [])) for i in range(n)], dtype=float)
-    xy0 = xy_for_frame(0)
-
-    scat = ax.scatter(
-        xy0[:, 0],
-        xy0[:, 1],
-        c=first_counts,
-        cmap="viridis",
-        s=25,
-        vmin=0,
-        vmax=max(1, first_counts.max()),
+    data0 = data_for_frame(0)
+    x0, y0, u0, v0 = data0[:, 0], data0[:, 1], data0[:, 2], data0[:, 3]
+    angles0 = np.arctan2(v0, u0)
+    if scenario == "CIRCULAR_LEADER":
+        trayectoria = plt.Circle((5, 5), 5, color='gray', fill=False, linestyle='--', zorder=1, alpha=0.5)
+        ax.add_patch(trayectoria)
+    quiv = ax.quiver(
+        x0, y0, u0, v0, angles0,
+        cmap="hsv",
+        pivot="mid",
+        scale=1.5,
+        width=0.004,
+        clim=(-np.pi, np.pi)
     )
-    cbar = fig.colorbar(scat, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Neighbor count")
+
+    cbar = fig.colorbar(quiv, ax=ax, fraction=0.046, pad=0.04)
+    cbar.set_label("Angulo de Velocidad")
 
     text = ax.text(
         0.02, 0.98, "", transform=ax.transAxes, ha="left", va="top",
         bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
     )
 
+    # Destacar al líder sin tapar su vector
     leader_mark = None
     highlight_leader = leader_id is not None and scenario in {"LEADER", "CIRCULAR_LEADER"}
     if highlight_leader:
         idx = leader_id - 1
         leader_mark = ax.scatter(
-            xy0[idx, 0],
-            xy0[idx, 1],
-            marker="*",
-            s=120,
-            c="red",
-            edgecolors="black",
-            linewidths=0.8,
+            x0[idx],
+            y0[idx],
+            marker="o",          # Círculo en lugar de estrella
+            s=300,               # Tamaño lo suficientemente grande para rodear el vector
+            facecolors="none",   # Transparente por dentro para que se vea el vector
+            edgecolors="black",  # Borde negro bien definido
+            linewidths=2.0,
             zorder=5,
-            label="Leader",
+            label="Lider"
         )
         ax.legend(loc="upper right")
 
     def update(frame_idx):
-        frame = frames_data[frame_idx]
-        counts = np.array([len(frame.get(i + 1, [])) for i in range(n)], dtype=float)
-        xy = xy_for_frame(frame_idx)
+        data = data_for_frame(frame_idx)
+        x, y, u, v = data[:, 0], data[:, 1], data[:, 2], data[:, 3]
+        angles = np.arctan2(v, u)
 
-        scat.set_offsets(xy)
-        scat.set_array(counts)
-        scat.set_clim(0, max(1, counts.max()))
-        text.set_text(f"Iteration: {frame_numbers[frame_idx]}")
+        quiv.set_offsets(np.c_[x, y])
+        quiv.set_UVC(u, v, angles)
+
+        text.set_text(f"Iteracion: {frame_numbers[frame_idx]}")
 
         if highlight_leader and leader_mark is not None:
             idx = leader_id - 1
-            leader_mark.set_offsets(xy[idx])
+            leader_mark.set_offsets(np.c_[x[idx], y[idx]])
 
-        return scat, text, leader_mark if leader_mark is not None else scat
+        return quiv, text, leader_mark if leader_mark is not None else quiv
 
     anim = FuncAnimation(
         fig,
@@ -201,20 +190,19 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
             anim.save(save_path.as_posix(), writer="ffmpeg")
         else:
             anim.save(save_path.as_posix())
-        print(f"Saved animation to: {save_path}")
+        print(f"Animacion guardada en: {save_path}")
         plt.close(fig)
         return
 
     plt.tight_layout()
     plt.show()
 
-
 def main():
-    parser = argparse.ArgumentParser(description="Animate SDS neighbor iterations in an LxL box.")
-    parser.add_argument("--timestamp", required=True, help="Timestamp prefix (e.g. 1773437098)")
-    parser.add_argument("--data-dir", default="data", help="Directory containing the files (default: data)")
-    parser.add_argument("--interval", type=int, default=120, help="Frame interval in ms (default: 120)")
-    parser.add_argument("--save", default=None, help="Optional output animation path (.gif or .mp4)")
+    parser = argparse.ArgumentParser(description="Animacion SdS Autómatas")
+    parser.add_argument("--timestamp", required=True)
+    parser.add_argument("--data-dir", default="data")
+    parser.add_argument("--interval", type=int, default=120)
+    parser.add_argument("--save", default=None)
     args = parser.parse_args()
 
     base = Path(args.data_dir) / args.timestamp
@@ -229,7 +217,6 @@ def main():
         interval_ms=args.interval,
         save_path=Path(args.save) if args.save else None,
     )
-
 
 if __name__ == "__main__":
     main()

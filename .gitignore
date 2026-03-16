@@ -106,7 +106,7 @@ pip-wheel-metadata/
 *.egg-info/
 .eggs/
 .pyre/
-
+data
 # --- Go ---
 bin/
 pkg/

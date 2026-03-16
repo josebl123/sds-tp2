@@ -9,7 +9,9 @@ public class Simulation {
     static final int L = 10;
     static final double VELOCITY = 0.03;
     static final double CIRCULAR_SCENARIO_RADIUS = 5;
-    static final double[] CIRCULAR_SCENARIO_CENTER = {2, 2};
+    static final int INTERACTION_RADIUS = 1;
+    static final int M = L / INTERACTION_RADIUS;
+    static final double[] CIRCULAR_SCENARIO_CENTER = {5, 5};
     static final double ANGULAR_VELOCITY = VELOCITY / CIRCULAR_SCENARIO_RADIUS;
     static int CIRCULAR_SCENARIO_STEP = 0;
     static int CIRCULAR_SCENARIO_MAX_STEP = (int) Math.ceil((2 * Math.PI) / ANGULAR_VELOCITY);
@@ -24,30 +26,24 @@ public class Simulation {
 
     public static void main(String[] args) {
         List<Particle> particles = null;
-        double rc = 0;
         double eta = 0;
-        int M = 0;
-        String method = "CIM";
         String baseFilename = String.valueOf(System.currentTimeMillis() / 1000);
+        int scenario = 0; // 0: standard, 1: leader, 2: circular leader
 
         try {
             if (args.length == 2) {
                 String staticFile = args[0];
                 String dynamicFile = args[1];
                 double[] lArr = new double[1];
-                Scanner scanner = new Scanner(System.in);
-                System.out.print("M: "); M = scanner.nextInt();
-                System.out.print("rc: "); rc = scanner.nextDouble();
                 particles = loadParticles(staticFile, dynamicFile, lArr);
                 baseFilename = new File(staticFile).getName().replace(".txt", "");
 
             } else {
                     Scanner scanner = new Scanner(System.in);
-                    System.out.print("r_c: "); rc = scanner.nextDouble();
-                    System.out.print("M: "); M = scanner.nextInt();
                     System.out.print("Eta: "); eta = scanner.nextDouble();
+                    System.out.print("Scenario (0: estandar, 1: lider, 2: lider circular): "); scenario = scanner.nextInt();
                     scanner.close();
-
+                    SCENARIO = Scenario.values()[scenario];
                 particles = generateParticles();
                 saveMapFiles(particles, baseFilename);
             }
@@ -56,23 +52,28 @@ public class Simulation {
             Map<Integer, Set<Particle>> neighbors;
 
 
-            CellIndexMethod cim = new CellIndexMethod(M, rc);
+            CellIndexMethod cim = new CellIndexMethod(M, INTERACTION_RADIUS);
             cim.populateGrid(particles);
             neighbors = cim.calculateNeighbors();
 
             writeDynamicFrame(baseFilename, 0, particles, false); // initial frame
-
+            PrintWriter orderWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + "-order.txt"));
             for (int i = 0; i < 1000; i++) {
                 saveOutputs(neighbors, baseFilename, i);
                 if (i > 0) {
                     writeDynamicFrame(baseFilename, i, particles, true);
                 }
+
+                double currentOrder = calculateOrder(particles);
+                orderWriter.println(i + " " + currentOrder);
+
                 for (Particle p : particles) {
                     updateParticle(p, neighbors.get(p.getId()), eta);
                 }
                 neighbors = cim.calculateNeighbors();
             }
 
+            orderWriter.close();
             long endTime = System.nanoTime();
             double timeMs = (endTime - startTime) / 1000000.0;
 
@@ -114,6 +115,7 @@ public class Simulation {
         if (SCENARIO.equals(Scenario.CIRCULAR_LEADER) && p.getId() == LEADER_ID) {
             nx = CIRCULAR_SCENARIO_CENTER[0] + CIRCULAR_SCENARIO_RADIUS * Math.cos(ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP);
             ny = CIRCULAR_SCENARIO_CENTER[1] + CIRCULAR_SCENARIO_RADIUS * Math.sin(ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP);
+            p.setAngle((ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP) + (Math.PI / 2.0));
             CIRCULAR_SCENARIO_STEP = (CIRCULAR_SCENARIO_STEP + 1) % CIRCULAR_SCENARIO_MAX_STEP;
         } else {
             nx = p.getX() + Math.cos(p.getAngle()) * VELOCITY;
