@@ -36,7 +36,7 @@ public class SimulationB {
 
                 b.println("Eta: " + val);
 
-                for (int i = 0; i < ITERATIONS; i++) {
+                for (int i = 0; i < ITERATIONS_B; i++) {
 
                     b.println(i + " " + calculateOrder(map.get(val)));
 
@@ -46,7 +46,7 @@ public class SimulationB {
                     neighbors = cim.calculateNeighbors();
                 }
 
-                b.println(ITERATIONS + " " + calculateOrder(map.get(val)));
+                b.println(ITERATIONS_B + " " + calculateOrder(map.get(val)));
                 b.println();
             }
         } catch (IOException e) {

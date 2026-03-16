@@ -19,6 +19,7 @@ public class Utils {
     static final String DATA_DIR = "data";
     static final int LEADER_ID = 1;
     static final int ITERATIONS = 50;
+    static final int ITERATIONS_B = 50;
     enum Scenario {
         STANDARD,
         LEADER,
