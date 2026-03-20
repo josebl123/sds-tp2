@@ -6,26 +6,40 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class Utils {
+    //GLOBAL
     static final double N = 40;
     static final int L = 10;
     static final double VELOCITY = 0.03;
-    static final double CIRCULAR_SCENARIO_RADIUS = 5;
     static final int INTERACTION_RADIUS = 1;
     static final int M = L / INTERACTION_RADIUS;
-    static final double[] CIRCULAR_SCENARIO_CENTER = {2, 2};
-    static final double ANGULAR_VELOCITY = VELOCITY / CIRCULAR_SCENARIO_RADIUS;
-    static int CIRCULAR_SCENARIO_STEP = 0;
-    static int CIRCULAR_SCENARIO_MAX_STEP = (int) Math.ceil((2 * Math.PI) / ANGULAR_VELOCITY);
+    static final int TRANSITION_ITERATIONS = 50;
     static final String DATA_DIR = "data";
-    static final int LEADER_ID = 1;
-    static final int ITERATIONS = 300;
-    static final int ITERATIONS_B = 50;
     enum Scenario {
         STANDARD,
         LEADER,
         CIRCULAR_LEADER
     }
     static Scenario SCENARIO = Scenario.STANDARD;
+
+    //LEADER
+    static final int LEADER_ID = 1;
+
+//      CIRCULAR LEADER
+        static final double CIRCULAR_SCENARIO_RADIUS = 5;
+        static final double[] CIRCULAR_SCENARIO_CENTER = {2, 2};
+        static final double ANGULAR_VELOCITY = VELOCITY / CIRCULAR_SCENARIO_RADIUS;
+        static int CIRCULAR_SCENARIO_STEP = 0;
+        static int CIRCULAR_SCENARIO_MAX_STEP = (int) Math.ceil((2 * Math.PI) / ANGULAR_VELOCITY);
+
+    //SIMULATION A
+    static final int ITERATIONS_A = 300;
+
+    // SIMULATION B
+    static final int ITERATIONS_B = 50;
+
+    // SIMULATION C
+    static final int ITERATIONS_C = 150;
+    static final int STEPS_C = 10;
 
     static void updateParticle(Particle p, Set<Particle> neighbors, double eta) {
         if (SCENARIO.equals(Scenario.STANDARD) || p.getId() != LEADER_ID) {

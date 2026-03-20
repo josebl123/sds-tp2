@@ -19,36 +19,35 @@ public class SimulationC {
         Map<Double, Double> resultsError = new TreeMap<>();
         List<Double> orders = new ArrayList<>();
 
-        final int steps = 10;
         double orderAvg = 0;
         double order = 0;
         double desvioSum = 0;
         double desvio = 0;
         double error = 0;
 
-        for (double eta = 0.0; eta <= Math.PI * 2; eta += Math.PI * 2 / steps) {
+        for (double eta = 0.0; eta <= Math.PI * 2; eta += Math.PI * 2 / STEPS_C) {
             particles = baseParticles.stream().map(Particle::new).collect(Collectors.toList());
             cim.populateGrid(particles);
             neighbors = cim.calculateNeighbors();
-            for (int i = 0; i < 200; i++) {
+            for (int i = 0; i < TRANSITION_ITERATIONS + ITERATIONS_C; i++) {
                 for (Particle p : particles) {
                     updateParticle(p, neighbors.get(p.getId()), eta);
                 }
                 cim.populateGrid(particles);
-                if (i >= 50) {
+                if (i >= TRANSITION_ITERATIONS) {
                     order = calculateOrder(particles);
                     orders.add(order);
                     orderAvg += order;
                 }
                 neighbors = cim.calculateNeighbors();
             }
-            orderAvg = orderAvg / 150;
+            orderAvg = orderAvg / ITERATIONS_C;
 
             for (double o : orders) {
                 desvioSum += Math.pow((o - orderAvg), 2);
             }
-            desvio = Math.sqrt(desvioSum / 150);
-            error = desvio / Math.sqrt(150);
+            desvio = Math.sqrt(desvioSum / ITERATIONS_C);
+            error = desvio / Math.sqrt(ITERATIONS_C);
             resultsOrder.put(eta, order);
             resultsError.put(eta, error);
         }

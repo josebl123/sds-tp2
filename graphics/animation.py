@@ -114,21 +114,35 @@ def parse_neighbors_output(path: Path) -> Tuple[List[Dict[int, List[int]]], List
 
     return frames, frame_numbers
 
-def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interval_ms: int, save_path: Optional[Path]):
+def parse_order_file(path: Path) -> Tuple[List[int], List[float]]:
+    iterations = []
+    orders = []
+    with path.open("r", encoding="utf-8") as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) == 2:
+                iterations.append(int(parts[0]))
+                orders.append(float(parts[1]))
+    return iterations, orders
+
+def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, order_path: Path, interval_ms: int, save_path: Optional[Path]):
     n, l, scenario, leader_id, circle_center, circle_radius = parse_static_file(static_path)
     dynamic_frames = parse_dynamic_file(dynamic_path, n)
     frames_data, frame_numbers = parse_neighbors_output(neighbors_path)
+    order_iterations, order_values = parse_order_file(order_path)
 
     def data_for_frame(idx: int) -> np.ndarray:
         return dynamic_frames[min(idx, len(dynamic_frames) - 1)]
 
-    fig, ax = plt.subplots(figsize=(8, 8))
-    ax.set_xlim(0, l)
-    ax.set_ylim(0, l)
-    ax.set_aspect("equal", adjustable="box")
-    ax.set_title("Animacion de Bandadas")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
+    fig, (ax_anim, ax_order) = plt.subplots(2, 1, figsize=(8, 10), gridspec_kw={'height_ratios': [4, 1]})
+
+    # Animation subplot
+    ax_anim.set_xlim(0, l)
+    ax_anim.set_ylim(0, l)
+    ax_anim.set_aspect("equal", adjustable="box")
+    ax_anim.set_title("Animacion de Bandadas")
+    ax_anim.set_xlabel("x")
+    ax_anim.set_ylabel("y")
 
     data0 = data_for_frame(0)
     x0, y0, u0, v0 = data0[:, 0], data0[:, 1], data0[:, 2], data0[:, 3]
@@ -147,8 +161,8 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
                     zorder=1,
                     alpha=0.5
                 )
-                ax.add_patch(trayectoria)
-    quiv = ax.quiver(
+                ax_anim.add_patch(trayectoria)
+    quiv = ax_anim.quiver(
         x0, y0, u0, v0, angles0,
         cmap="hsv",
         pivot="mid",
@@ -157,13 +171,13 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
         clim=(-np.pi, np.pi)
     )
 
-    cbar = fig.colorbar(quiv, ax=ax, fraction=0.046, pad=0.04)
+    cbar = fig.colorbar(quiv, ax=ax_anim, fraction=0.046, pad=0.04)
     cbar.set_label("Angulo de Velocidad (rad)")
     cbar.set_ticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
     cbar.set_ticklabels(["-π", "-π/2", "0", "π/2", "π"])
 
-    text = ax.text(
-        0.02, 0.98, "", transform=ax.transAxes, ha="left", va="top",
+    text = ax_anim.text(
+        0.02, 0.98, "", transform=ax_anim.transAxes, ha="left", va="top",
         bbox=dict(facecolor="white", alpha=0.7, edgecolor="none")
     )
 
@@ -172,7 +186,7 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
     highlight_leader = leader_id is not None and scenario in {"LEADER", "CIRCULAR_LEADER"}
     if highlight_leader:
         idx = leader_id - 1
-        leader_mark = ax.scatter(
+        leader_mark = ax_anim.scatter(
             x0[idx],
             y0[idx],
             marker="o",          # Círculo en lugar de estrella
@@ -183,23 +197,15 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
             zorder=5,
             label="Lider"
         )
-        ax.legend(loc="upper right")
+        ax_anim.legend(loc="upper right")
 
-    # Etiquetas con el id de cada partícula
-    # id_labels = [
-    #     ax.text(
-    #         x0[i],
-    #         y0[i],
-    #         str(i + 1),
-    #         ha="center",
-    #         va="center",
-    #         fontsize=7,
-    #         color="black",
-    #         zorder=6,
-    #         bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"),
-    #     )
-    #     for i in range(len(x0))
-    # ]
+    # Order subplot
+    ax_order.set_xlim(0, max(order_iterations) if order_iterations else 1)
+    ax_order.set_ylim(0, 1)
+    ax_order.set_xlabel("Iteracion")
+    ax_order.set_ylabel("Orden")
+    ax_order.grid(True)
+    line_order, = ax_order.plot([], [], lw=2)
 
     def update(frame_idx):
         data = data_for_frame(frame_idx)
@@ -215,10 +221,13 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
             idx = leader_id - 1
             leader_mark.set_offsets(np.c_[x[idx], y[idx]])
 
-        # for i, label in enumerate(id_labels):
-        #     label.set_position((x[i], y[i]))
+        # Update order plot
+        current_iteration = frame_numbers[frame_idx]
+        relevant_iterations = [it for it in order_iterations if it <= current_iteration]
+        relevant_orders = [order_values[i] for i, it in enumerate(order_iterations) if it <= current_iteration]
+        line_order.set_data(relevant_iterations, relevant_orders)
 
-        return quiv, text, leader_mark if leader_mark is not None else quiv
+        return quiv, text, leader_mark if leader_mark is not None else quiv, line_order
 
     anim = FuncAnimation(
         fig,
@@ -257,11 +266,13 @@ def main():
     static_path = base.with_suffix(".txt")
     dynamic_path = Path(f"{base}-Dynamic.txt")
     neighbors_path = Path(f"{base}-output.txt")
+    order_path = Path(f"{base}-order.txt")
 
     animate(
         static_path=static_path,
         dynamic_path=dynamic_path,
         neighbors_path=neighbors_path,
+        order_path=order_path,
         interval_ms=args.interval,
         save_path=Path(args.save) if args.save else None,
     )

@@ -41,7 +41,7 @@ public class Simulation {
 
             writeDynamicFrame(baseFilename, 0, particles, false); // initial frame
             PrintWriter orderWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + "-order.txt"));
-            for (int i = 0; i < ITERATIONS; i++) {
+            for (int i = 0; i < ITERATIONS_A; i++) {
                 saveOutputs(neighbors, baseFilename, i);
                 if (i > 0) {
                     writeDynamicFrame(baseFilename, i, particles, true);
@@ -60,8 +60,6 @@ public class Simulation {
             orderWriter.close();
             long endTime = System.nanoTime();
             double timeMs = (endTime - startTime) / 1000000.0;
-
-            double order = calculateOrder(particles);
 
             System.out.println("Tiempo de ejecucion: " + timeMs + " ms");
             System.out.println("Archivos generados con timestamp: " + baseFilename);
