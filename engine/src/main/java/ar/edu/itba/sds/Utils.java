@@ -6,7 +6,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 public class Utils {
-    static final double N = 400;
+    static final double N = 40;
     static final int L = 10;
     static final double VELOCITY = 0.03;
     static final double CIRCULAR_SCENARIO_RADIUS = 5;
@@ -18,7 +18,7 @@ public class Utils {
     static int CIRCULAR_SCENARIO_MAX_STEP = (int) Math.ceil((2 * Math.PI) / ANGULAR_VELOCITY);
     static final String DATA_DIR = "data";
     static final int LEADER_ID = 1;
-    static final int ITERATIONS = 200;
+    static final int ITERATIONS = 300;
     static final int ITERATIONS_B = 50;
     enum Scenario {
         STANDARD,
@@ -32,11 +32,13 @@ public class Utils {
             double sinAvg = 0.0;
             double cosAvg = 0.0;
             Random rand = new Random();
-            for (Particle particle : neighbors) {
-                sinAvg += Math.sin(particle.getAngle());
-                cosAvg += Math.cos(particle.getAngle());
+            if (!neighbors.isEmpty()) {
+                for (Particle particle : neighbors) {
+                    sinAvg += Math.sin(particle.getAngle());
+                    cosAvg += Math.cos(particle.getAngle());
+                }
+                p.setAngle(Math.atan2(sinAvg / neighbors.size(), cosAvg / neighbors.size()) + ((rand.nextDouble() * 2) - 1) * eta / 2);
             }
-            p.setAngle(Math.atan2(sinAvg, cosAvg) + ((rand.nextDouble() * 2) - 1) * eta / 2);
         }
 
         double nx, ny;

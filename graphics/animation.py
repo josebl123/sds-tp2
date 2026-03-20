@@ -8,13 +8,15 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
 import numpy as np
 
-def parse_static_file(path: Path) -> Tuple[int, float, str, Optional[int]]:
+def parse_static_file(path: Path) -> Tuple[int, float, str, Optional[int], Optional[Tuple[float, float]], Optional[float]]:
     with path.open("r", encoding="utf-8") as f:
         lines = [line.strip() for line in f if line.strip()]
     n = int(float(lines[0]))
     l = float(lines[1])
     scenario = "STANDARD"
     leader_id: Optional[int] = None
+    circle_center: Optional[Tuple[float, float]] = None
+    circle_radius: Optional[float] = None
 
     if len(lines) > 2 and lines[2].startswith("SCENARIO"):
         parts = lines[2].split()
@@ -28,7 +30,20 @@ def parse_static_file(path: Path) -> Tuple[int, float, str, Optional[int]]:
             leader_id = int(parts[leader_idx + 1])
         except Exception:
             leader_id = None
-    return n, l, scenario, leader_id
+
+        if scenario == "CIRCULAR_LEADER":
+            try:
+                center_idx = parts.index("CIRCLE_CENTER")
+                circle_center = (float(parts[center_idx + 1]), float(parts[center_idx + 2]))
+            except Exception:
+                circle_center = None
+            try:
+                radius_idx = parts.index("CIRCLE_RADIUS")
+                circle_radius = float(parts[radius_idx + 1])
+            except Exception:
+                circle_radius = None
+
+    return n, l, scenario, leader_id, circle_center, circle_radius
 
 def parse_dynamic_file(path: Path, n_expected: int) -> List[np.ndarray]:
     with path.open("r", encoding="utf-8") as f:
@@ -100,7 +115,7 @@ def parse_neighbors_output(path: Path) -> Tuple[List[Dict[int, List[int]]], List
     return frames, frame_numbers
 
 def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interval_ms: int, save_path: Optional[Path]):
-    n, l, scenario, leader_id = parse_static_file(static_path)
+    n, l, scenario, leader_id, circle_center, circle_radius = parse_static_file(static_path)
     dynamic_frames = parse_dynamic_file(dynamic_path, n)
     frames_data, frame_numbers = parse_neighbors_output(neighbors_path)
 
@@ -118,9 +133,21 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
     data0 = data_for_frame(0)
     x0, y0, u0, v0 = data0[:, 0], data0[:, 1], data0[:, 2], data0[:, 3]
     angles0 = np.arctan2(v0, u0)
-    if scenario == "CIRCULAR_LEADER":
-        trayectoria = plt.Circle((5, 5), 5, color='gray', fill=False, linestyle='--', zorder=1, alpha=0.5)
-        ax.add_patch(trayectoria)
+    if scenario == "CIRCULAR_LEADER" and circle_center and circle_radius:
+        # Dibuja el círculo y sus imágenes periódicas
+        for dx in [-l, 0, l]:
+            for dy in [-l, 0, l]:
+                center = (circle_center[0] + dx, circle_center[1] + dy)
+                trayectoria = plt.Circle(
+                    center,
+                    circle_radius,
+                    color='gray',
+                    fill=False,
+                    linestyle='--',
+                    zorder=1,
+                    alpha=0.5
+                )
+                ax.add_patch(trayectoria)
     quiv = ax.quiver(
         x0, y0, u0, v0, angles0,
         cmap="hsv",
@@ -158,6 +185,22 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
         )
         ax.legend(loc="upper right")
 
+    # Etiquetas con el id de cada partícula
+    # id_labels = [
+    #     ax.text(
+    #         x0[i],
+    #         y0[i],
+    #         str(i + 1),
+    #         ha="center",
+    #         va="center",
+    #         fontsize=7,
+    #         color="black",
+    #         zorder=6,
+    #         bbox=dict(facecolor="white", alpha=0.6, edgecolor="none"),
+    #     )
+    #     for i in range(len(x0))
+    # ]
+
     def update(frame_idx):
         data = data_for_frame(frame_idx)
         x, y, u, v = data[:, 0], data[:, 1], data[:, 2], data[:, 3]
@@ -171,6 +214,9 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
         if highlight_leader and leader_mark is not None:
             idx = leader_id - 1
             leader_mark.set_offsets(np.c_[x[idx], y[idx]])
+
+        # for i, label in enumerate(id_labels):
+        #     label.set_position((x[i], y[i]))
 
         return quiv, text, leader_mark if leader_mark is not None else quiv
 

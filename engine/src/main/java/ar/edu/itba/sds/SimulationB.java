@@ -43,6 +43,7 @@ public class SimulationB {
                     for (Particle p : map.get(val)) {
                         updateParticle(p, neighbors.get(p.getId()), val);
                     }
+                    cim.populateGrid(map.get(val));
                     neighbors = cim.calculateNeighbors();
                 }
 

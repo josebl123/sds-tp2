@@ -53,6 +53,7 @@ public class Simulation {
                 for (Particle p : particles) {
                     updateParticle(p, neighbors.get(p.getId()), eta);
                 }
+                cim.populateGrid(particles);
                 neighbors = cim.calculateNeighbors();
             }
 
@@ -77,7 +78,11 @@ public class Simulation {
             staticWriter.println(N);
             staticWriter.println(L);
             // Metadata line to help the animation highlight the leader when applicable
-            staticWriter.println("SCENARIO " + SCENARIO + " LEADER_ID " + LEADER_ID);
+            String metadata = "SCENARIO " + SCENARIO + " LEADER_ID " + LEADER_ID;
+            if (SCENARIO == Scenario.CIRCULAR_LEADER) {
+                metadata += " CIRCLE_CENTER " + CIRCULAR_SCENARIO_CENTER[0] + " " + CIRCULAR_SCENARIO_CENTER[1] + " CIRCLE_RADIUS " + CIRCULAR_SCENARIO_RADIUS;
+            }
+            staticWriter.println(metadata);
             for (Particle p : particles) {
                 staticWriter.println(0 /*radius*/ + " " + 1.0);
             }

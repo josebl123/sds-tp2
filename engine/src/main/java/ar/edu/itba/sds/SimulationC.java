@@ -34,6 +34,7 @@ public class SimulationC {
                 for (Particle p : particles) {
                     updateParticle(p, neighbors.get(p.getId()), eta);
                 }
+                cim.populateGrid(particles);
                 if (i >= 50) {
                     order = calculateOrder(particles);
                     orders.add(order);
