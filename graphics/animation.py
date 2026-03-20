@@ -131,7 +131,9 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interva
     )
 
     cbar = fig.colorbar(quiv, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label("Angulo de Velocidad")
+    cbar.set_label("Angulo de Velocidad (rad)")
+    cbar.set_ticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
+    cbar.set_ticklabels(["-π", "-π/2", "0", "π/2", "π"])
 
     text = ax.text(
         0.02, 0.98, "", transform=ax.transAxes, ha="left", va="top",
@@ -201,7 +203,7 @@ def main():
     parser = argparse.ArgumentParser(description="Animacion SdS Autómatas")
     parser.add_argument("--timestamp", required=True)
     parser.add_argument("--data-dir", default="data")
-    parser.add_argument("--interval", type=int, default=120)
+    parser.add_argument("--interval", type=int, default=50)
     parser.add_argument("--save", default=None)
     args = parser.parse_args()
 

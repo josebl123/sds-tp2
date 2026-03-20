@@ -18,7 +18,7 @@ public class Utils {
     static int CIRCULAR_SCENARIO_MAX_STEP = (int) Math.ceil((2 * Math.PI) / ANGULAR_VELOCITY);
     static final String DATA_DIR = "data";
     static final int LEADER_ID = 1;
-    static final int ITERATIONS = 50;
+    static final int ITERATIONS = 200;
     static final int ITERATIONS_B = 50;
     enum Scenario {
         STANDARD,

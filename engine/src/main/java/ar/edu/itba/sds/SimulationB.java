@@ -34,7 +34,7 @@ public class SimulationB {
                 cim.populateGrid(map.get(val));
                 neighbors = cim.calculateNeighbors();
 
-                b.println("Eta: " + val);
+                b.println("Eta: " + String.format("%.2f", val));
 
                 for (int i = 0; i < ITERATIONS_B; i++) {
 
