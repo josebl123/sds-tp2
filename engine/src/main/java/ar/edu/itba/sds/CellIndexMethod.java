@@ -25,6 +25,13 @@ public class CellIndexMethod {
     }
 
     public void populateGrid(List<Particle> particles) {
+        // Clear all cells before repopulating
+        for (int i = 0; i < M; i++) {
+            for (int j = 0; j < M; j++) {
+                grid[i][j].getParticles().clear();
+            }
+        }
+
         double cellSize = L / M;
         for (Particle p : particles) {
             int row = (int) (p.getY() / cellSize);
