@@ -7,13 +7,14 @@ import java.util.*;
 
 public class Utils {
     //GLOBAL
-    static final double N = 40;
+    static final double N = 400;
     static final int L = 10;
     static final double VELOCITY = 0.03;
     static final int INTERACTION_RADIUS = 1;
     static final int M = L / INTERACTION_RADIUS;
-    static final int TRANSITION_ITERATIONS = 50;
+    static final int TRANSITION_ITERATIONS = 100;
     static final String DATA_DIR = "data";
+    static Random rand = new Random();
     enum Scenario {
         STANDARD,
         LEADER,
@@ -43,16 +44,15 @@ public class Utils {
 
     static void updateParticle(Particle p, Set<Particle> neighbors, double eta) {
         if (SCENARIO.equals(Scenario.STANDARD) || p.getId() != LEADER_ID) {
-            double sinAvg = 0.0;
-            double cosAvg = 0.0;
-            Random rand = new Random();
-            if (!neighbors.isEmpty()) {
-                for (Particle particle : neighbors) {
-                    sinAvg += Math.sin(particle.getAngle());
-                    cosAvg += Math.cos(particle.getAngle());
-                }
-                p.setAngle(Math.atan2(sinAvg / neighbors.size(), cosAvg / neighbors.size()) + ((rand.nextDouble() * 2) - 1) * eta / 2);
+           double sinAvg = Math.sin(p.getAngle());
+           double cosAvg = Math.cos(p.getAngle());
+           double noise = ((rand.nextDouble() * 2) - 1) * eta / 2;
+            for (Particle particle : neighbors) {
+                sinAvg += Math.sin(particle.getAngle());
+                cosAvg += Math.cos(particle.getAngle());
             }
+            int count = neighbors.size() + 1;
+            p.setAngle(Math.atan2(sinAvg / count, cosAvg / count) + noise);
         }
 
         double nx, ny;
@@ -61,7 +61,6 @@ public class Utils {
             nx = CIRCULAR_SCENARIO_CENTER[0] + CIRCULAR_SCENARIO_RADIUS * Math.cos(ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP);
             ny = CIRCULAR_SCENARIO_CENTER[1] + CIRCULAR_SCENARIO_RADIUS * Math.sin(ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP);
             p.setAngle((ANGULAR_VELOCITY * CIRCULAR_SCENARIO_STEP) + (Math.PI / 2.0));
-            CIRCULAR_SCENARIO_STEP = (CIRCULAR_SCENARIO_STEP + 1) % CIRCULAR_SCENARIO_MAX_STEP;
         } else {
             nx = p.getX() + Math.cos(p.getAngle()) * VELOCITY;
             ny = p.getY() + Math.sin(p.getAngle()) * VELOCITY;
@@ -85,7 +84,6 @@ public class Utils {
 
     static List<Particle> generateParticles() {
         List<Particle> particles = new ArrayList<>();
-        Random rand = new Random();
 
         int ids = 1;
 

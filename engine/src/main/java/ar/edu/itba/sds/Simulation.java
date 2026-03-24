@@ -50,9 +50,16 @@ public class Simulation {
                 double currentOrder = calculateOrder(particles);
                 orderWriter.println(i + " " + currentOrder);
 
+                List<Particle> nextParticles = new ArrayList<>();
                 for (Particle p : particles) {
-                    updateParticle(p, neighbors.get(p.getId()), eta);
+                    Particle nextP = new Particle(p);
+                    updateParticle(nextP, neighbors.get(p.getId()), eta);
+                    nextParticles.add(nextP);
                 }
+                if (SCENARIO == Scenario.CIRCULAR_LEADER) {
+                    CIRCULAR_SCENARIO_STEP = (CIRCULAR_SCENARIO_STEP + 1) % CIRCULAR_SCENARIO_MAX_STEP;
+                }
+                particles = nextParticles;
                 cim.populateGrid(particles);
                 neighbors = cim.calculateNeighbors();
             }

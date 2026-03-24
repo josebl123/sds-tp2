@@ -8,10 +8,11 @@ import numpy as np
 def main():
     parser = argparse.ArgumentParser(description="Graficar orden vs eta para corrida C")
     parser.add_argument("--timestamp", required=True, help="Timestamp de la corrida (sin sufijos)")
+    parser.add_argument("--scenario", type=int, default=0, help="Escenario (0: estandar, 1: lider, 2: lider circular)")
     parser.add_argument("--data-dir", default="data", help="Directorio de datos")
     args = parser.parse_args()
 
-    file_path = Path(args.data_dir) / f"{args.timestamp}C-C.txt"
+    file_path = Path(args.data_dir) / f"{args.timestamp}C-scenario{args.scenario}.txt"
     if not file_path.exists():
         print(f"Error: No se encontro el archivo {file_path}")
         return

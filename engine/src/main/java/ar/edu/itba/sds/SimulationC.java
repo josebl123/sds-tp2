@@ -49,9 +49,13 @@ public class SimulationC {
             cim.populateGrid(particles);
             neighbors = cim.calculateNeighbors();
             for (int i = 0; i < TRANSITION_ITERATIONS + ITERATIONS_C; i++) {
+                List<Particle> nextParticles = new ArrayList<>();
                 for (Particle p : particles) {
-                    updateParticle(p, neighbors.get(p.getId()), eta);
+                    Particle nextP = new Particle(p);
+                    updateParticle(nextP, neighbors.get(p.getId()), eta);
+                    nextParticles.add(nextP);
                 }
+                particles = nextParticles;
                 cim.populateGrid(particles);
                 if (i >= TRANSITION_ITERATIONS) {
                     double order = calculateOrder(particles);

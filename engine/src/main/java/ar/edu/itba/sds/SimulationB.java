@@ -58,9 +58,13 @@ public class SimulationB {
 
                     b.println(i + " " + calculateOrder(map.get(val)));
 
+                    List<Particle> nextParticles = new ArrayList<>();
                     for (Particle p : map.get(val)) {
-                        updateParticle(p, neighbors.get(p.getId()), val);
+                        Particle nextP = new Particle(p);
+                        updateParticle(nextP, neighbors.get(p.getId()), val);
+                        nextParticles.add(nextP);
                     }
+                    map.put(val, nextParticles);
                     cim.populateGrid(map.get(val));
                     neighbors = cim.calculateNeighbors();
                 }
