@@ -12,6 +12,7 @@ public class Simulation {
         double eta = 0;
         String baseFilename = String.valueOf(System.currentTimeMillis() / 1000);
         int scenario = 0; // 0: standard, 1: leader, 2: circular leader
+        int iterations = ITERATIONS_A;
 
         try {
             if (args.length == 2) {
@@ -24,6 +25,7 @@ public class Simulation {
             } else {
                     Scanner scanner = new Scanner(System.in);
                     System.out.print("Eta: "); eta = scanner.nextDouble();
+                    System.out.print("Iterations: "); iterations = scanner.nextInt();
                     System.out.print("Scenario (0: estandar, 1: lider, 2: lider circular): "); scenario = scanner.nextInt();
                     scanner.close();
                     SCENARIO = Scenario.values()[scenario];
@@ -41,7 +43,7 @@ public class Simulation {
 
             writeDynamicFrame(baseFilename, 0, particles, false); // initial frame
             PrintWriter orderWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + "-order.txt"));
-            for (int i = 0; i < ITERATIONS_A; i++) {
+            for (int i = 0; i < iterations; i++) {
                 saveOutputs(neighbors, baseFilename, i);
                 if (i > 0) {
                     writeDynamicFrame(baseFilename, i, particles, true);

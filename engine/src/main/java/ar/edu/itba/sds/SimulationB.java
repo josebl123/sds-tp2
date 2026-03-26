@@ -13,12 +13,15 @@ public class SimulationB {
     public static void main(String[] args) {
         // Accept scenario as argument or from stdin
         int scenario = 0;
+        int iterations = 0;
         if (args.length >= 1) {
             scenario = Integer.parseInt(args[0]);
         } else {
             Scanner scanner = new Scanner(System.in);
             System.out.print("Scenario (0: estandar, 1: lider, 2: lider circular): ");
             scenario = scanner.nextInt();
+            System.out.print("Iterations: ");
+            iterations = scanner.nextInt();
             scanner.close();
         }
         SCENARIO = Scenario.values()[scenario];
@@ -54,7 +57,7 @@ public class SimulationB {
 
                 b.println("Eta: " + String.format("%.2f", val));
 
-                for (int i = 0; i < ITERATIONS_B; i++) {
+                for (int i = 0; i < iterations; i++) {
 
                     b.println(i + " " + calculateOrder(map.get(val)));
 
@@ -69,7 +72,7 @@ public class SimulationB {
                     neighbors = cim.calculateNeighbors();
                 }
 
-                b.println(ITERATIONS_B + " " + calculateOrder(map.get(val)));
+                b.println(iterations + " " + calculateOrder(map.get(val)));
                 b.println();
             }
         } catch (IOException e) {
