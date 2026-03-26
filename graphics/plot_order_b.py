@@ -36,11 +36,20 @@ def main():
     parser = argparse.ArgumentParser(description="Graficar orden vs iteracion para corrida B")
     parser.add_argument("--timestamp", required=True, help="Timestamp de la corrida (sin sufijos)")
     parser.add_argument("--data-dir", default="data", help="Directorio de datos")
+
     args = parser.parse_args()
 
-    file_path = Path(args.data_dir) / f"{args.timestamp}B-B.txt"
-    if not file_path.exists():
-        print(f"Error: No se encontro el archivo {file_path}")
+    file_path = None
+    scenario = None
+    for i in range(3): # Check for scenarios 0, 1, 2
+        path = Path(args.data_dir) / f"{args.timestamp}B-scenario{i}.txt"
+        if path.exists():
+            file_path = path
+            scenario = i
+            break
+
+    if file_path is None:
+        print(f"Error: No se encontro el archivo para el timestamp {args.timestamp}B-scenario[0-2].txt")
         return
 
     curves = parse_b_file(file_path)
@@ -58,8 +67,13 @@ def main():
     plt.ylim(0, 1.05)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.legend()
+    output_dir = Path(args.data_dir) / "plots"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"order_vs_iteration_B_{args.timestamp}.png"
+
     plt.tight_layout()
-    plt.show()
+    plt.savefig(output_path, dpi=300)
+    print(f"Grafico guardado en {output_path}")
 
 
 if __name__ == "__main__":

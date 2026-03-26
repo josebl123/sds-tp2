@@ -90,8 +90,14 @@ def main():
     plt.ylim(-0.05, 1.05)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.legend(fontsize=11)
+    output_dir = Path(args.data_dir) / "plots"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    scenarios_str = "".join(map(str, sorted(args.scenarios)))
+    output_path = output_dir / f"comparison_va_eta_{args.timestamp}C_sc{scenarios_str}.png"
+
     plt.tight_layout()
-    plt.show()
+    plt.savefig(output_path, dpi=300)
+    print(f"Grafico guardado en {output_path}")
 
 
 if __name__ == "__main__":

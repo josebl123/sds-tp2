@@ -8,13 +8,21 @@ import numpy as np
 def main():
     parser = argparse.ArgumentParser(description="Graficar orden vs eta para corrida C")
     parser.add_argument("--timestamp", required=True, help="Timestamp de la corrida (sin sufijos)")
-    parser.add_argument("--scenario", type=int, default=0, help="Escenario (0: estandar, 1: lider, 2: lider circular)")
+
     parser.add_argument("--data-dir", default="data", help="Directorio de datos")
     args = parser.parse_args()
 
-    file_path = Path(args.data_dir) / f"{args.timestamp}C-scenario{args.scenario}.txt"
-    if not file_path.exists():
-        print(f"Error: No se encontro el archivo {file_path}")
+    file_path = None
+    scenario = None
+    for i in range(3): # Check for scenarios 0, 1, 2
+        path = Path(args.data_dir) / f"{args.timestamp}C-scenario{i}.txt"
+        if path.exists():
+            file_path = path
+            scenario = i
+            break
+
+    if file_path is None:
+        print(f"Error: No se encontro el archivo para el timestamp {args.timestamp}C-scenario[0-2].txt")
         return
 
     try:
@@ -59,8 +67,13 @@ def main():
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.legend()
 
+    output_dir = Path(args.data_dir) / "plots"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"order_vs_eta_C_sc{scenario}_{args.timestamp}.png"
+
     plt.tight_layout()
-    plt.show()
+    plt.savefig(output_path, dpi=300)
+    print(f"Grafico guardado en {output_path}")
 
 
 if __name__ == "__main__":

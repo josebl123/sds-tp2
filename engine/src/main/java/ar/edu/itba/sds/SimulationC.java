@@ -84,6 +84,6 @@ public class SimulationC {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        System.out.println("Archivo generado: " + outputFile);
+        System.out.println("Archivo generado con timestamp: " + baseFilename.substring(0, baseFilename.length() - 1));
     }
 }

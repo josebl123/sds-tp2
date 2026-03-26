@@ -32,8 +32,13 @@ def main():
     plt.grid(True, linestyle='--', alpha=0.7)
     plt.legend()
 
+    output_dir = Path(args.data_dir) / "plots"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / f"observable_va_{args.timestamp}.png"
+
     plt.tight_layout()
-    plt.show()
+    plt.savefig(output_path, dpi=300)
+    print(f"Grafico guardado en {output_path}")
 
 if __name__ == "__main__":
     main()
