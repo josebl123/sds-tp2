@@ -69,8 +69,7 @@ public class SimulationC {
             for (double o : orders) {
                 desvioSum += Math.pow((o - orderAvg), 2);
             }
-            double desvio = Math.sqrt(desvioSum / ITERATIONS_C);
-            double error = desvio / Math.sqrt(ITERATIONS_C);
+            double error = Math.sqrt(desvioSum / ITERATIONS_C);
             resultsOrder.put(eta, orderAvg);
             resultsError.put(eta, error);
         }
