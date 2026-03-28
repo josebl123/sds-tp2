@@ -84,9 +84,8 @@ def main():
                 label=label,
             )
 
-    plt.xlabel(r"$\eta$", fontsize=13)
-    plt.ylabel(r"$v_a$", fontsize=13)
-    plt.title(r"Polarización $v_a$ vs ruido $\eta$ — Comparación de escenarios")
+    plt.xlabel(r"$\eta$", fontsize=16)
+    plt.ylabel(r"$v_a$", fontsize=16)
     plt.ylim(-0.05, 1.05)
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.legend(fontsize=11)

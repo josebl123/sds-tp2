@@ -7,7 +7,7 @@ import java.util.*;
 
 public class Utils {
     //GLOBAL
-    static final double N = 400;
+    static final double N = 4d .00;
     static final int L = 10;
     static final double VELOCITY = 0.03;
     static final int INTERACTION_RADIUS = 1;
