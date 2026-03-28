@@ -59,14 +59,17 @@ def main():
 
     plt.figure(figsize=(10, 5))
     for eta, iterations, orders in curves:
-        plt.plot(iterations, orders, label=f"eta = {eta}", linewidth=1.5)
+        plt.plot(iterations, orders, label=rf"$\eta = {eta}$", linewidth=1.5)
 
-    plt.title("Orden vs Iteracion (corrida B)")
-    plt.xlabel("Iteracion (t)")
-    plt.ylabel("Orden")
+    plt.axvline(x=200, color='black', linestyle='--', linewidth=2)
+
+    plt.xlabel("Iteracion (t)", fontsize=16)
+    plt.ylabel(r"$v_a$", fontsize=16)
     plt.ylim(0, 1.05)
     plt.grid(True, linestyle="--", alpha=0.7)
-    plt.legend()
+    plt.legend(fontsize=13, loc='lower right')
+    plt.xticks(fontsize=13)
+    plt.yticks(fontsize=13)
     output_dir = Path(args.data_dir) / "plots"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"order_vs_iteration_B_{args.timestamp}.png"

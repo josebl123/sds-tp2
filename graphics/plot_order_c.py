@@ -44,11 +44,11 @@ def main():
 
     plt.figure(figsize=(8, 5))
     if error is not None:
-        plt.errorbar(eta, order, yerr=error, fmt="o-", linewidth=1.5, color="tab:blue", ecolor="tab:orange", elinewidth=1, capsize=3, label="Orden ± error")
+        plt.errorbar(eta, order, yerr=error, fmt="o-", linewidth=1.5, color="tab:blue", ecolor="tab:orange", elinewidth=1, capsize=3)
         y_low = np.min(order - error)
         y_high = np.max(order + error)
     else:
-        plt.plot(eta, order, marker="o", linestyle="-", linewidth=1.5, color="tab:blue", label="Orden")
+        plt.plot(eta, order, marker="o", linestyle="-", linewidth=1.5, color="tab:blue")
         y_low = np.min(order)
         y_high = np.max(order)
 
@@ -62,9 +62,8 @@ def main():
     plt.ylim(y_min, y_max)
     plt.margins(y=0.05)
     plt.xlabel(r"$\eta$")
-    plt.ylabel("$\langle v_a \rangle$")
+    plt.ylabel(r"$\langle v_a \rangle$")
     plt.grid(True, linestyle="--", alpha=0.7)
-    plt.legend()
 
     output_dir = Path(args.data_dir) / "plots"
     output_dir.mkdir(parents=True, exist_ok=True)
