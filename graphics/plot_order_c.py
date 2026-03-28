@@ -61,9 +61,8 @@ def main():
 
     plt.ylim(y_min, y_max)
     plt.margins(y=0.05)
-    plt.title("Orden vs eta (corrida C)")
     plt.xlabel(r"$\eta$")
-    plt.ylabel("Orden")
+    plt.ylabel("$\langle v_a \rangle$")
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.legend()
 

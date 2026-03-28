@@ -85,10 +85,10 @@ def main():
             )
 
     plt.xlabel(r"$\eta$", fontsize=16)
-    plt.ylabel(r"$v_a$", fontsize=16)
+    plt.ylabel(r"$\langle v_a \rangle$", fontsize=16)
     plt.ylim(-0.05, 1.05)
     plt.grid(True, linestyle="--", alpha=0.7)
-    plt.legend(fontsize=11)
+    plt.legend(fontsize=13)
     output_dir = Path(args.data_dir) / "plots"
     output_dir.mkdir(parents=True, exist_ok=True)
     scenarios_str = "".join(map(str, sorted(args.scenarios)))
