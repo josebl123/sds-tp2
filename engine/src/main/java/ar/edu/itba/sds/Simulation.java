@@ -15,23 +15,14 @@ public class Simulation {
         int iterations = ITERATIONS_A;
 
         try {
-            if (args.length == 2) {
-                String staticFile = args[0];
-                String dynamicFile = args[1];
-                double[] lArr = new double[1];
-                particles = loadParticles(staticFile, dynamicFile, lArr);
-                baseFilename = new File(staticFile).getName().replace(".txt", "");
-
-            } else {
-                    Scanner scanner = new Scanner(System.in);
-                    System.out.print("Eta: "); eta = scanner.nextDouble();
-                    System.out.print("Iterations: "); iterations = scanner.nextInt();
-                    System.out.print("Scenario (0: estandar, 1: lider, 2: lider circular): "); scenario = scanner.nextInt();
-                    scanner.close();
-                    SCENARIO = Scenario.values()[scenario];
-                particles = generateParticles();
-                saveMapFiles(particles, baseFilename);
-            }
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Eta: "); eta = scanner.nextDouble();
+            System.out.print("Iterations: "); iterations = scanner.nextInt();
+            System.out.print("Scenario (0: estandar, 1: lider, 2: lider circular): "); scenario = scanner.nextInt();
+            scanner.close();
+            SCENARIO = Scenario.values()[scenario];
+            particles = generateParticles();
+            saveMapFiles(particles, baseFilename);
 
             long startTime = System.nanoTime();
             Map<Integer, Set<Particle>> neighbors;
@@ -84,7 +75,6 @@ public class Simulation {
             PrintWriter staticWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + ".txt", true));
             staticWriter.println(N);
             staticWriter.println(L);
-            // Metadata line to help the animation highlight the leader when applicable
             String metadata = "SCENARIO " + SCENARIO + " LEADER_ID " + LEADER_ID;
             if (SCENARIO == Scenario.CIRCULAR_LEADER) {
                 metadata += " CIRCLE_CENTER " + CIRCULAR_SCENARIO_CENTER[0] + " " + CIRCULAR_SCENARIO_CENTER[1] + " CIRCLE_RADIUS " + CIRCULAR_SCENARIO_RADIUS;
@@ -95,7 +85,6 @@ public class Simulation {
             }
             staticWriter.close();
 
-            // Initial frame is now written in writeDynamicFrame, so no work here
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -112,7 +101,6 @@ public class Simulation {
             staticScanner.nextLine();
         }
 
-        // If there is a metadata line starting with SCENARIO, consume it; otherwise, keep scanning radii
         if (staticScanner.hasNext("SCENARIO")) {
             if (staticScanner.hasNextLine()) {
                 staticScanner.nextLine();
