@@ -67,15 +67,16 @@ def main():
     plt.ylabel(r"$v_a$", fontsize=16)
     plt.ylim(0, 1.05)
     plt.grid(True, linestyle="--", alpha=0.7)
-    plt.legend(fontsize=13, loc='lower right')
+    plt.legend(fontsize=13, loc='upper left', bbox_to_anchor=(1, 1))
     plt.xticks(fontsize=13)
     plt.yticks(fontsize=13)
+
     output_dir = Path(args.data_dir) / "plots"
     output_dir.mkdir(parents=True, exist_ok=True)
     output_path = output_dir / f"order_vs_iteration_B_{args.timestamp}.png"
 
     plt.tight_layout()
-    plt.savefig(output_path, dpi=300)
+    plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"Grafico guardado en {output_path}")
 
 

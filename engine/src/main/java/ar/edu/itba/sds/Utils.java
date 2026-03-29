@@ -12,7 +12,7 @@ public class Utils {
     static final double VELOCITY = 0.03;
     static final int INTERACTION_RADIUS = 1;
     static final int M = L / INTERACTION_RADIUS;
-    static final int TRANSITION_ITERATIONS = 100;
+    static final int TRANSITION_ITERATIONS = 200;
     static final String DATA_DIR = "data";
     static Random rand = new Random();
     enum Scenario {
