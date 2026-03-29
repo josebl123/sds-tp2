@@ -82,6 +82,10 @@ public class Utils {
         return Math.sqrt(Math.pow(velocityAccX, 2) + Math.pow(velocityAccY, 2)) / N;
     }
 
+    static double calculateOrder(double velocityAccX, double velocityAccY) {
+        return Math.sqrt(Math.pow(velocityAccX, 2) + Math.pow(velocityAccY, 2)) / N;
+    }
+
     static List<Particle> generateParticles() {
         List<Particle> particles = new ArrayList<>();
 

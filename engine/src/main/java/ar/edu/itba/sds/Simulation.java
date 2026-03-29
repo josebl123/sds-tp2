@@ -22,7 +22,7 @@ public class Simulation {
             scanner.close();
             SCENARIO = Scenario.values()[scenario];
             particles = generateParticles();
-            saveMapFiles(particles, baseFilename);
+            saveMapFiles(baseFilename);
 
             long startTime = System.nanoTime();
             Map<Integer, Set<Particle>> neighbors;
@@ -33,15 +33,12 @@ public class Simulation {
             neighbors = cim.calculateNeighbors();
 
             writeDynamicFrame(baseFilename, 0, particles, false); // initial frame
-            PrintWriter orderWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + "-order.txt"));
             for (int i = 0; i < iterations; i++) {
                 saveOutputs(neighbors, baseFilename, i);
                 if (i > 0) {
                     writeDynamicFrame(baseFilename, i, particles, true);
                 }
 
-                double currentOrder = calculateOrder(particles);
-                orderWriter.println(i + " " + currentOrder);
 
                 List<Particle> nextParticles = new ArrayList<>();
                 for (Particle p : particles) {
@@ -57,7 +54,6 @@ public class Simulation {
                 neighbors = cim.calculateNeighbors();
             }
 
-            orderWriter.close();
             long endTime = System.nanoTime();
             double timeMs = (endTime - startTime) / 1000000.0;
 
@@ -69,10 +65,9 @@ public class Simulation {
         }
     }
 
-    private static void saveMapFiles(List<Particle> particles, String baseFilename) {
+    private static void saveMapFiles(String baseFilename) {
         new File(DATA_DIR).mkdirs();
-        try {
-            PrintWriter staticWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + ".txt", true));
+        try (PrintWriter staticWriter = new PrintWriter(new FileWriter(DATA_DIR + "/" + baseFilename + ".txt", true))) {
             staticWriter.println(N);
             staticWriter.println(L);
             String metadata = "SCENARIO " + SCENARIO + " LEADER_ID " + LEADER_ID;
@@ -80,62 +75,10 @@ public class Simulation {
                 metadata += " CIRCLE_CENTER " + CIRCULAR_SCENARIO_CENTER[0] + " " + CIRCULAR_SCENARIO_CENTER[1] + " CIRCLE_RADIUS " + CIRCULAR_SCENARIO_RADIUS;
             }
             staticWriter.println(metadata);
-            for (Particle p : particles) {
-                staticWriter.println(0 /*radius*/ + " " + 1.0);
-            }
-            staticWriter.close();
 
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
-    }
-
-    private static List<Particle> loadParticles(String staticPath, String dynamicPath, double[] L_out) throws Exception {
-        List<Particle> particles = new ArrayList<>();
-        Scanner staticScanner = new Scanner(new File(staticPath)).useLocale(java.util.Locale.US);
-        Scanner dynamicScanner = new Scanner(new File(dynamicPath)).useLocale(java.util.Locale.US);
-
-        int N = staticScanner.nextInt();
-        L_out[0] = staticScanner.nextDouble();
-        if (staticScanner.hasNextLine()) {
-            staticScanner.nextLine();
-        }
-
-        if (staticScanner.hasNext("SCENARIO")) {
-            if (staticScanner.hasNextLine()) {
-                staticScanner.nextLine();
-            }
-        }
-
-        for (int i = 0; i < N; i++) {
-            String line = staticScanner.nextLine().trim();
-            while (line.isEmpty() && staticScanner.hasNextLine()) {
-                line = staticScanner.nextLine().trim();
-            }
-        }
-
-        dynamicScanner.nextDouble();
-
-        if (dynamicScanner.hasNextLine()) {
-            dynamicScanner.nextLine();
-        }
-
-        for (int i = 0; i < N; i++) {
-            String line = dynamicScanner.nextLine().trim();
-            while (line.isEmpty() && dynamicScanner.hasNextLine()) {
-                line = dynamicScanner.nextLine().trim();
-            }
-
-            String[] parts = line.split("\\s+");
-            double x = Double.parseDouble(parts[0]);
-            double y = Double.parseDouble(parts[1]);
-            double angle = Double.parseDouble(parts[2]);
-            particles.add(new Particle(i + 1, x, y, angle));
-        }
-
-        staticScanner.close();
-        dynamicScanner.close();
-        return particles;
     }
 }
 

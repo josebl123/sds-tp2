@@ -114,27 +114,15 @@ def parse_neighbors_output(path: Path) -> Tuple[List[Dict[int, List[int]]], List
 
     return frames, frame_numbers
 
-def parse_order_file(path: Path) -> Tuple[List[int], List[float]]:
-    iterations = []
-    orders = []
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split()
-            if len(parts) == 2:
-                iterations.append(int(parts[0]))
-                orders.append(float(parts[1]))
-    return iterations, orders
-
-def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, order_path: Path, interval_ms: int, save_path: Optional[Path]):
+def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, interval_ms: int, save_path: Optional[Path]):
     n, l, scenario, leader_id, circle_center, circle_radius = parse_static_file(static_path)
     dynamic_frames = parse_dynamic_file(dynamic_path, n)
     frames_data, frame_numbers = parse_neighbors_output(neighbors_path)
-    order_iterations, order_values = parse_order_file(order_path)
 
     def data_for_frame(idx: int) -> np.ndarray:
         return dynamic_frames[min(idx, len(dynamic_frames) - 1)]
 
-    fig, (ax_anim, ax_order) = plt.subplots(2, 1, figsize=(8, 10), gridspec_kw={'height_ratios': [4, 1]})
+    fig, ax_anim = plt.subplots(figsize=(8, 8))
 
     # Animation subplot
     ax_anim.set_xlim(0, l)
@@ -199,14 +187,6 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, order_p
         )
         ax_anim.legend(loc="upper right")
 
-    # Order subplot
-    ax_order.set_xlim(0, max(order_iterations) if order_iterations else 1)
-    ax_order.set_ylim(0, 1)
-    ax_order.set_xlabel("Iteracion")
-    ax_order.set_ylabel("Orden")
-    ax_order.grid(True)
-    line_order, = ax_order.plot([], [], lw=2)
-
     def update(frame_idx):
         data = data_for_frame(frame_idx)
         x, y, u, v = data[:, 0], data[:, 1], data[:, 2], data[:, 3]
@@ -221,13 +201,8 @@ def animate(static_path: Path, dynamic_path: Path, neighbors_path: Path, order_p
             idx = leader_id - 1
             leader_mark.set_offsets(np.c_[x[idx], y[idx]])
 
-        # Update order plot
-        current_iteration = frame_numbers[frame_idx]
-        relevant_iterations = [it for it in order_iterations if it <= current_iteration]
-        relevant_orders = [order_values[i] for i, it in enumerate(order_iterations) if it <= current_iteration]
-        line_order.set_data(relevant_iterations, relevant_orders)
 
-        return quiv, text, leader_mark if leader_mark is not None else quiv, line_order
+        return quiv, text, leader_mark if leader_mark is not None else quiv
 
     anim = FuncAnimation(
         fig,
@@ -266,13 +241,11 @@ def main():
     static_path = base.with_suffix(".txt")
     dynamic_path = Path(f"{base}-Dynamic.txt")
     neighbors_path = Path(f"{base}-output.txt")
-    order_path = Path(f"{base}-order.txt")
 
     animate(
         static_path=static_path,
         dynamic_path=dynamic_path,
         neighbors_path=neighbors_path,
-        order_path=order_path,
         interval_ms=args.interval,
         save_path=Path(args.save) if args.save else None,
     )
