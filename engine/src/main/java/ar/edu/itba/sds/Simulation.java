@@ -32,7 +32,7 @@ public class Simulation {
             cim.populateGrid(particles);
             neighbors = cim.calculateNeighbors();
 
-            writeDynamicFrame(baseFilename, 0, particles, false); // initial frame
+            writeDynamicFrame(baseFilename, 0, particles, false);
             for (int i = 0; i < iterations; i++) {
                 saveOutputs(neighbors, baseFilename, i);
                 if (i > 0) {
